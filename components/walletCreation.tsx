@@ -10,12 +10,27 @@ import { Connection, PublicKey, Keypair, LAMPORTS_PER_SOL, } from "@solana/web3.
 import { ethers } from "ethers";
 import { HDNodeWallet } from "ethers";
 import { Wallet } from "ethers";
-// to create wallet and send receive features
+import { Visibility, VisibilityOff, ContentCopy } from "@mui/icons-material";
+import WalletCard from "./walletCard";
 
+// to create wallet and send receive features
+interface EthereumWallet {
+  chain: "ethereum";
+  publicKey: string;
+  privateKey: string;
+  balance: string;
+}
+
+interface SolanaWallet {
+  chain: "solana";
+  publicKey: string;
+  privateKey: string;
+  balance: string;
+}
 interface WalletType {
-  walletNumber: number,
-  solana: Object,
-  ethereum: Object,
+  walletNumber: number;
+  solana: SolanaWallet;
+  ethereum: EthereumWallet;
 }
 
 const ETHEREUM_RPC = "https://eth-mainnet.g.alchemy.com/v2/qPuH3QPcyyGJdTzXi9hz9";
@@ -26,7 +41,7 @@ const conn = new Connection(SOLANA_RPC, "confirmed");
 
 const WalletCreation = ({ mnemonic }: string) => {
 
-  const [tokens, setTokens] = useState<WalletType>()
+  const [tokens, setTokens] = useState<WalletType[]>([])
 
 
   // const provider = new ethers.JsonRpcProvider(
@@ -37,20 +52,22 @@ const WalletCreation = ({ mnemonic }: string) => {
 
   useEffect(() => {
     const generateWallets = async () => {
-      const solanaWallet = await generateKeyPair("solana", mnemonic, 0);
-      const ethereumWallet = await generateKeyPair("ethereum", mnemonic, 0);
+      const solanaWallet = await generateKeyPair("solana", mnemonic, 0) as SolanaWallet;
+      const ethereumWallet = await generateKeyPair("ethereum", mnemonic, 0) as EthereumWallet;
 
       
     console.log(ethereumWallet,solanaWallet,'Address')
 
+      const walletData = [
+        {
+          walletNumber: 0,
+          solana: solanaWallet,
+          ethereum: ethereumWallet,
+        },
+      ];
 
-
-      setTokens({
-        walletNumber: 0,
-        solana: solanaWallet,
-        ethereum: ethereumWallet,
-      });
-    };
+      setTokens(walletData);
+};
         
 
 
@@ -76,7 +93,7 @@ const WalletCreation = ({ mnemonic }: string) => {
       const ethBalance = ethers.formatEther(balance)
       return {
         chain: "ethereum",
-        address: wallet.address,
+        publicKey: wallet.address,
         privateKey: wallet.privateKey,
         balance: ethBalance
       };
@@ -93,13 +110,12 @@ const WalletCreation = ({ mnemonic }: string) => {
       return {
         chain: "solana",
         publicKey: keypair.publicKey.toBase58(),
-        secretKey: Buffer.from(secret).toString("hex"),
+        privateKey: Buffer.from(secret).toString("hex"),
         balace: solBalance
       };
     }
 
 
-    //toast.error("Unsupported Chain");
     throw new Error("Unsupported chain");
      
   };
@@ -161,6 +177,14 @@ const WalletCreation = ({ mnemonic }: string) => {
         <Typography variant="h6" sx={{ mb: 1, color: "#fff" }}>
           Tokens
         </Typography>
+
+        <Box>
+          {tokens.map( (item,index) => (<>
+         <Box key={`${index}-sol`}><WalletCard chainData={item.solana} />  </Box>
+         <Box  key={`${index}-eth`}><WalletCard   chainData={item.ethereum} /> </Box> </>
+          ))}
+        </Box>
+
       </Box>
     </>
   )
@@ -169,42 +193,6 @@ const WalletCreation = ({ mnemonic }: string) => {
 
 }
 
-
-
-// const WalletCard = ({ chainData }: WalletType) => (
-//   <Box
-//     sx={{
-//       display: "flex",
-//       alignItems: "center",
-//       justifyContent: "space-between",
-//       backgroundColor: "#1a1a1a",
-//       borderRadius: 3,
-//       padding: "12px 16px",
-//       width: 300,
-//       height: 90,
-//       boxShadow: "0px 0px 8px rgba(0,0,0,0.5)",
-//     }}
-//   >
-//     <Box display="flex" alignItems="center">
-//       <Avatar
-//         src={logo}
-//         alt={name}
-//         sx={{
-//           bgcolor: "#000",
-//           width: 40,
-//           height: 40,
-//           mr: 2,
-//         }}
-//       />
-//       <Box>
-//         <Typography sx={{ color: "#fff", fontWeight: 600 }}>{name}</Typography>
-//         <Typography sx={{ color: "#999", fontSize: 14 }}>
-//           {balanceCrypto}
-//         </Typography>
-//       </Box>
-//     </Box>
-//   </Box>
-// );
 
 
 export default WalletCreation;

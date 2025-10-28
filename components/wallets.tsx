@@ -72,7 +72,10 @@ const wallets = () => {
     <div ref={rootRef}>
       <Modal
         open={open}
-        onClose={handleClose}
+        onClose={(event, reason) => {
+    if (reason && reason === "backdropClick") return;
+    handleClose();
+  }}
         aria-labelledby="wallet-modal"
         sx={{
           display: "flex",
@@ -230,7 +233,6 @@ const wallets = () => {
                <Button
                 variant="contained"
                 fullWidth
-                disabled={!password || !confirmPassword}
                 sx={{
                   bgcolor: "#9c6bff",
                   textTransform: "none",
@@ -244,6 +246,7 @@ const wallets = () => {
                   },
                 }}
                 onClick={() => {
+                  setStep("features")
                 }}
               >
                 Continue
@@ -253,7 +256,7 @@ const wallets = () => {
 
 
           {step === "features" && (
-            <WalletCreation/>
+            <WalletCreation mnemonic={mnemonic}/>
           ) }
 
         </Box>
