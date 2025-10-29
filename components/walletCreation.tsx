@@ -12,26 +12,11 @@ import { HDNodeWallet } from "ethers";
 import { Wallet } from "ethers";
 import { Visibility, VisibilityOff, ContentCopy } from "@mui/icons-material";
 import WalletCard from "./walletCard";
+import ChainItem from "./receiveFeature";
+import { EthereumWallet, SolanaWallet } from "./wallets";
 
 // to create wallet and send receive features
-interface EthereumWallet {
-  chain: "ethereum";
-  publicKey: string;
-  privateKey: string;
-  balance: string;
-}
 
-interface SolanaWallet {
-  chain: "solana";
-  publicKey: string;
-  privateKey: string;
-  balance: string;
-}
-interface WalletType {
-  walletNumber: number;
-  solana: SolanaWallet;
-  ethereum: EthereumWallet;
-}
 
 const ETHEREUM_RPC = "https://eth-mainnet.g.alchemy.com/v2/qPuH3QPcyyGJdTzXi9hz9";
 const SOLANA_RPC = "https://solana-mainnet.g.alchemy.com/v2/qPuH3QPcyyGJdTzXi9hz9";
@@ -39,16 +24,9 @@ const SOLANA_RPC = "https://solana-mainnet.g.alchemy.com/v2/qPuH3QPcyyGJdTzXi9hz
 const provider = new ethers.JsonRpcProvider(ETHEREUM_RPC);
 const conn = new Connection(SOLANA_RPC, "confirmed");
 
-const WalletCreation = ({ mnemonic }: string) => {
+const WalletCreation = ({ mnemonic,setStep , tokens,setTokens}: any) => {
 
-  const [tokens, setTokens] = useState<WalletType[]>([])
-
-
-  // const provider = new ethers.JsonRpcProvider(
-  //   "https://eth-mainnet.g.alchemy.com/v2/qPuH3QPcyyGJdTzXi9hz9"
-  // );
-  //  const RPC = "https://solana-mainnet.g.alchemy.com/v2/qPuH3QPcyyGJdTzXi9hz9";
-  //   const conn = new Connection(RPC, "confirmed");
+  // const [tokens, setTokens] = useState<WalletType[]>([])
 
   useEffect(() => {
     const generateWallets = async () => {
@@ -122,10 +100,10 @@ const WalletCreation = ({ mnemonic }: string) => {
 
   return (
     <>
-
       <Box display="flex" justifyContent="space-around">
         <Button
-          startIcon={<QrCode2OutlinedIcon sx={{ fontSize: 40, mb: 1.5, color: '#9c6bff' }} />} // 🔹 Bigger icon
+          startIcon={<QrCode2OutlinedIcon sx={{ fontSize: 40, mb: 1.5, color: '#9c6bff' }} />} 
+          onClick={()=> setStep('receive')}
           sx={{
             flexDirection: "column",
             alignItems: "center",
@@ -174,17 +152,28 @@ const WalletCreation = ({ mnemonic }: string) => {
       </Box>
 
       <Box>
+        
         <Typography variant="h6" sx={{ mb: 1, color: "#fff" }}>
           Tokens
         </Typography>
 
         <Box>
-          {tokens.map( (item,index) => (<>
+          {tokens.map( (item,index) => (<Box key={index}>
          <Box key={`${index}-sol`}><WalletCard chainData={item.solana} />  </Box>
-         <Box  key={`${index}-eth`}><WalletCard   chainData={item.ethereum} /> </Box> </>
+         <Box  key={`${index}-eth`}><WalletCard   chainData={item.ethereum} /> </Box> </Box>
           ))}
-        </Box>
+        </Box>  
+       
 
+
+ {/* { receive && ( 
+          <Box sx={{mt:5}}>
+          {tokens.map( (item,index) => (<Box key={index}>
+         <Box key={`${index}-sol`}><ChainItem chain={item.solana} />  </Box>
+         <Box  key={`${index}-eth`}><ChainItem   chain={item.ethereum} /> </Box> </Box>
+          ))}
+        </Box> 
+  ) } */}
       </Box>
     </>
   )

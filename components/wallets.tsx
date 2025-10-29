@@ -18,6 +18,7 @@ import { Grid } from "@mui/system";
 import { useRef, useState } from "react";
 import SeedPhrase from "./seedphrase";
 import WalletCreation from "./walletCreation";
+import ChainItem from "./receiveFeature";
 
 const style = {
   position: 'absolute',
@@ -31,6 +32,24 @@ const style = {
   p: 4,
 };
 
+export interface EthereumWallet {
+  chain: "ethereum";
+  publicKey: string;
+  privateKey: string;
+  balance: string;
+}
+
+export interface SolanaWallet {
+  chain: "solana";
+  publicKey: string;
+  privateKey: string;
+  balance: string;
+}
+export interface WalletType {
+  walletNumber: number;
+  solana: SolanaWallet;
+  ethereum: EthereumWallet;
+}
 
 const wallets = () => {
   const [step, setStep] = useState("welcome"); // welcome | password | seed
@@ -42,6 +61,7 @@ const wallets = () => {
   const [password, setPassword] = useState('')
   const [error, setError] = useState("");
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [tokens, setTokens] = useState<WalletType[]>([])
 
 
 
@@ -256,8 +276,18 @@ const wallets = () => {
 
 
           {step === "features" && (
-            <WalletCreation mnemonic={mnemonic}/>
+            <WalletCreation mnemonic={mnemonic} setStep={setStep} tokens={tokens} setTokens={setTokens}/>
           ) }
+
+
+          {step === "receive" && (
+            <Box sx={{mt:5}}>
+          {tokens.map( (item,index) => (<Box key={index}>
+         <Box key={`${index}-sol`}><ChainItem chain={item.solana} />  </Box>
+         <Box  key={`${index}-eth`}><ChainItem   chain={item.ethereum} /> </Box> </Box>
+          ))}
+        </Box> 
+          )}
 
         </Box>
       </Modal>

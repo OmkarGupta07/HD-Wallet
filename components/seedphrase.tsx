@@ -7,41 +7,69 @@ import {
 } from "@mui/material";
 import { Grid } from "@mui/system";
 import { useEffect, useState } from "react";
+import { ethers } from "ethers";
+import * as bip39 from "bip39";
+import { derivePath } from "ed25519-hd-key";
+import { Keypair } from "@solana/web3.js";
+import { HDNodeWallet } from "ethers";
 
 
-const SeedPhrase = ({ mnemonic,setStep,step }: any) => {
-    const boxes = Array.from({ length: 12 }, (_, i) => i + 1);
-    console.log(mnemonic,'memo')
-    const [words,setWords] = useState([
-        { id: 1, word: '' },
-        { id: 2, word: '' },
-        { id: 3, word: '' },
-        { id: 4, word: '' },
-        { id: 5, word: '' },
-        { id: 6, word: '' },
-        { id: 7, word: '' },
-        { id: 8, word: '' },
-        { id: 9, word: '' },
-        { id: 10, word: '' },
-        { id: 11, word: '' },
-        { id: 12, word: '' },
-    ]);
+const SeedPhrase = ({ mnemonic, setStep, step }: any) => {
+    const [words, setWords] = useState(
+        Array.from({ length: 12 }, (_, i) => ({ id: i + 1, word: "" }))
+    );
 
     useEffect(() => {
-    if (mnemonic && mnemonic.length === words.length) {
-      setWords((prev) =>
-        prev.map((w, i) => ({
-          ...w,
-          word: mnemonic[i],
-        }))
-      );
-    }
-  }, [mnemonic]);
+        if (mnemonic && mnemonic.length === words.length) {
+            setWords((prev) =>
+                prev.map((w, i) => ({
+                    ...w,
+                    word: mnemonic[i],
+                }))
+            );
+        }
+    }, [mnemonic]);
+
+
+    const handleChange = (index: number, value: string) => {
+        const updated = words.map((w, i) => (i === index ? { ...w, word: value } : w));
+        setWords(updated);
+    };
 
     const rows = [];
     for (let i = 0; i < words.length; i += 3) {
         rows.push(words.slice(i, i + 3));
     }
+
+    async function deriveWalletsFromMnemonic(mnemonic: string) {
+    const arr=[];
+  if (!bip39.validateMnemonic(mnemonic)) {
+    throw new Error("Invalid mnemonic");
+  }
+
+  const seed = await bip39.mnemonicToSeed(mnemonic);
+
+  const ethPath = `m/44'/60'/0'/0/0`;
+  const ethWallet = HDNodeWallet.fromPhrase(mnemonic, undefined, ethPath);
+
+  const solPath = `m/44'/501'/0'/0'`;
+  const derived = derivePath(solPath, seed.toString("hex"));
+  const solPrivateKey = derived.key.slice(0, 32);
+  const solKeypair = Keypair.fromSeed(solPrivateKey);
+
+  return {
+    ethereum: {
+      path: ethPath,
+      address: ethWallet.address,
+      privateKey: ethWallet.privateKey,
+    },
+    solana: {
+      path: solPath,
+      publicKey: solKeypair.publicKey.toBase58(),
+      secretKey: Buffer.from(solKeypair.secretKey).toString("hex"),
+    },
+  };
+}
 
 
     return (
@@ -60,11 +88,9 @@ const SeedPhrase = ({ mnemonic,setStep,step }: any) => {
                             <Grid item xs={12} sm={4} key={item.id} sx={{ width: '30%' }}>
                                 <TextField
                                     value={item.word}
-                                    InputProps={{
-                                        readOnly: true,
-                                    }}
+                                    InputProps={mnemonic?.length > 0 ? true : false}
                                     placeholder={`${item.id}.`}
-
+                                    onChange={(e) => handleChange(rowIndex * 3 + index, e.target.value)}
                                     size="small"
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
@@ -91,31 +117,34 @@ const SeedPhrase = ({ mnemonic,setStep,step }: any) => {
                 ))}
             </Box>
 
-                
-                
-              <Button
-  variant="contained"
-  fullWidth
-  //disabled={}
-  sx={{
-    bgcolor: "#9c6bff",
-    textTransform: "none",
-    fontWeight: 600,
-    borderRadius: 3,
-    mt:3,
-    "&:hover": { bgcolor: "#a580ff" },
-    "&.Mui-disabled": {
-      bgcolor: "#555", // visible disabled color
-      color: "#aaa",   // lighter text
-      opacity: 0.7,    // subtle fade
-    },
-  }}
-  onClick={() => {
-    setStep("walletcreation")
-  }}
->
-  Continue
-</Button>
+
+
+            <Button
+                variant="contained"
+                fullWidth
+                //disabled={}
+                sx={{
+                    bgcolor: "#9c6bff",
+                    textTransform: "none",
+                    fontWeight: 600,
+                    borderRadius: 3,
+                    mt: 3,
+                    "&:hover": { bgcolor: "#a580ff" },
+                    "&.Mui-disabled": {
+                        bgcolor: "#555", // visible disabled color
+                        color: "#aaa",   // lighter text
+                        opacity: 0.7,    // subtle fade
+                    },
+                }}
+                onClick={() => {
+                 if(mnemonic.length>0)
+                    setStep("walletcreation")
+                else 
+                    deriveWalletsFromMnemonic()
+                }}
+            >
+                Continue
+            </Button>
 
 
         </Box>

@@ -68,7 +68,7 @@ const WalletCard = ({ chainData }: WalletCardProps) => {
             sx={{ bgcolor: "#000", width: 40, height: 40, mr: 2 }}
           />
           <Box>
-            <Typography sx={{ color: "#fff", fontWeight: 600 }}>{chain}</Typography>
+            <Typography sx={{ color: "#fff", fontWeight: 600 }}>{chain.toUpperCase()}</Typography>
             <Typography sx={{ color: "#999", fontSize: 14 }}>{balance}</Typography>
           </Box>
         </Box>
