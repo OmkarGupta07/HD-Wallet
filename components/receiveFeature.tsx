@@ -48,14 +48,14 @@ const handleCopy = async (e) => {
             onClick={handleCopy}
             className="text-white bg-[#282828] hover:bg-[#383838] p-2 rounded-lg"
           >
-            <Copy size={20} />
-          </IconButton>
+            <Copy size={20} color="#9c6bff" />
+          </IconButton >
         </Stack>
       }
     >
       <ListItemAvatar>
         <Box className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-white border border-gray-700">
-            <img src={chain == 'solana' ? solana.src : eth.src} alt={`${chain.chain} logo`} className="w-full h-full object-cover" />
+            <img src={chain.chain == 'solana' ? solana.src : eth.src} alt={`${chain.chain} logo`} className="w-full h-full object-cover" />
         </Box>
       </ListItemAvatar>
       <ListItemText
@@ -67,7 +67,7 @@ const handleCopy = async (e) => {
         secondary={
     <Tooltip title={chain.publicKey} arrow>
         <Typography
-          variant="body2"
+          component="span"
           className="text-gray-400 text-sm truncate max-w-[180px]"
         >
           {chain.publicKey}

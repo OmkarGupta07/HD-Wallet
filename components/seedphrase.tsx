@@ -138,7 +138,7 @@ const SeedPhrase = ({ mnemonic, setStep, step }: any) => {
                 }}
                 onClick={() => {
                  if(mnemonic.length>0)
-                    setStep("walletcreation")
+                    setStep(2)
                 else 
                     deriveWalletsFromMnemonic()
                 }}

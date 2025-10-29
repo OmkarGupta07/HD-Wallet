@@ -14,6 +14,7 @@ import { Visibility, VisibilityOff, ContentCopy } from "@mui/icons-material";
 import WalletCard from "./walletCard";
 import ChainItem from "./receiveFeature";
 import { EthereumWallet, SolanaWallet } from "./wallets";
+import toast from "react-hot-toast";
 
 // to create wallet and send receive features
 
@@ -28,36 +29,17 @@ const WalletCreation = ({ mnemonic,setStep , tokens,setTokens}: any) => {
 
   // const [tokens, setTokens] = useState<WalletType[]>([])
 
+  const [walletCount,setWalletCount] = useState<number>(0)
+
   useEffect(() => {
-    const generateWallets = async () => {
-      const solanaWallet = await generateKeyPair("solana", mnemonic, 0) as SolanaWallet;
-      const ethereumWallet = await generateKeyPair("ethereum", mnemonic, 0) as EthereumWallet;
-
-      
-    console.log(ethereumWallet,solanaWallet,'Address')
-
-      const walletData = [
-        {
-          walletNumber: 0,
-          solana: solanaWallet,
-          ethereum: ethereumWallet,
-        },
-      ];
-
-      setTokens(walletData);
-};
-        
-
-
-    if (mnemonic) generateWallets();
+    
+    if (mnemonic) generateWallets(walletCount);
     else alert("Mnemonic Not Found");
 
   }, [mnemonic]);
 
 
-
-
-  const generateKeyPair = async (chain: string, mnemonic: string, count: number) => {
+ const generateKeyPair = async (chain: string, mnemonic: string, count: number) => {
 
 
     if (chain === "ethereum") {
@@ -89,7 +71,7 @@ const WalletCreation = ({ mnemonic,setStep , tokens,setTokens}: any) => {
         chain: "solana",
         publicKey: keypair.publicKey.toBase58(),
         privateKey: Buffer.from(secret).toString("hex"),
-        balace: solBalance
+        balance: solBalance
       };
     }
 
@@ -98,27 +80,59 @@ const WalletCreation = ({ mnemonic,setStep , tokens,setTokens}: any) => {
      
   };
 
+  const generateWallets = async (count:number) => {
+        try {
+
+          if(count>=3){
+            toast.error('Cant Add More than 3 Accounts');
+            return ;
+          }
+
+      setWalletCount(count);
+      const solanaWallet = await generateKeyPair("solana", mnemonic, count) as SolanaWallet;
+      const ethereumWallet = await generateKeyPair("ethereum", mnemonic, count) as EthereumWallet;
+      const walletData = [
+        {
+          walletNumber: count,
+          solana: solanaWallet,
+          ethereum: ethereumWallet,
+        },
+      ];
+
+      setTokens((prevTokens) => [...prevTokens, walletData]);
+      return true;
+    }catch(err){
+      console.log(err)
+      return false;
+    }
+};
+
+const addWallet=async ()=>{
+   const wallet=await generateWallets(walletCount+1);
+   wallet ? toast.success(`Account Created SuccessFully`) : toast.error(`Something Went Wrong`)
+  }
+
   return (
     <>
       <Box display="flex" justifyContent="space-around">
         <Button
           startIcon={<QrCode2OutlinedIcon sx={{ fontSize: 40, mb: 1.5, color: '#9c6bff' }} />} 
-          onClick={()=> setStep('receive')}
+          onClick={()=> setStep(4)}
           sx={{
             flexDirection: "column",
             alignItems: "center",
             color: "#eee",
             textTransform: "none",
             fontWeight: 700,
-            border: "1px solid #9c6bff", // 🔹 Border color
-            borderRadius: "16px",        // 🔹 Rounded corners
+            border: "1px solid #9c6bff", 
+            borderRadius: "16px",        
             px: 3,
             py: 2,
             "& .MuiButton-startIcon": {
-              margin: 0, // ✅ removes default left margin
+              margin: 0, 
             },
             "&:hover": {
-              borderColor: "#a580ff",    // 🔹 Slightly lighter on hover
+              borderColor: "#a580ff",   
               backgroundColor: "rgba(156, 107, 255, 0.1)",
             },
           }}
@@ -149,6 +163,36 @@ const WalletCreation = ({ mnemonic,setStep , tokens,setTokens}: any) => {
         >
           Send
         </Button>
+
+
+              <Button
+          startIcon={<SendOutlinedIcon sx={{ fontSize: 40, mb: 1.5, color: '#9c6bff' }} />}
+          sx={{
+            flexDirection: "column",
+            alignItems: "center",
+            color: "#eee",
+            textTransform: "none",
+            fontWeight: 700,
+            border: "1px solid #9c6bff",
+            borderRadius: "16px",
+            px: 3,
+            py: 2,
+            "& .MuiButton-startIcon": {
+              margin: 0,
+            },
+            "&:hover": {
+              borderColor: "#a580ff",
+              backgroundColor: "rgba(156, 107, 255, 0.1)",
+            },
+          }}
+          disabled={walletCount==3} 
+          onClick={addWallet}
+        >
+          Add Wallet
+        </Button>
+
+
+
       </Box>
 
       <Box>
@@ -157,10 +201,37 @@ const WalletCreation = ({ mnemonic,setStep , tokens,setTokens}: any) => {
           Tokens
         </Typography>
 
-        <Box>
+        <Box   
+               sx={{ maxHeight: 400,
+    overflowY: "auto",
+    scrollbarWidth: "thin", // Firefox
+    scrollbarColor: "#9c6bff #181818", // Firefox
+    "&::-webkit-scrollbar": {
+      width: "8px",
+      background: "#181818",
+      borderRadius: "8px",
+    },
+    "&::-webkit-scrollbar-thumb": {
+      background: "linear-gradient(135deg, #9c6bff 40%, #6b47ff 100%)",
+      borderRadius: "8px",
+            borderLeft: "4px solid transparent", // pushes thumb right
+      minHeight: "40px",
+      boxShadow: "0 2px 8px rgba(156,107,255,0.15)",
+      border: "2px solid #181818",
+      transition: "background 0.3s",
+    },
+    "&::-webkit-scrollbar-thumb:hover": {
+      background: "linear-gradient(135deg, #b89cff 0%, #9c6bff 100%)",
+    },
+    "&::-webkit-scrollbar-track": {
+      background: "#181818",
+      borderRadius: "8px",
+    },
+  }}
+        >
           {tokens.map( (item,index) => (<Box key={index}>
-         <Box key={`${index}-sol`}><WalletCard chainData={item.solana} />  </Box>
-         <Box  key={`${index}-eth`}><WalletCard   chainData={item.ethereum} /> </Box> </Box>
+         <Box key={`${index}-sol`}><WalletCard chainData={item[0].solana} />  </Box>
+         <Box  key={`${index}-eth`}><WalletCard   chainData={item[0].ethereum} /> </Box> </Box>
           ))}
         </Box>  
        
