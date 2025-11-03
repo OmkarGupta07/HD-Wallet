@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, MouseEvent } from 'react';
 import {
   Box,
   Typography,
@@ -22,10 +22,18 @@ import solana from '../solana.png';
 import eth from '../ethereum.png';
 
 
-const ChainItem = ({ chain }):any =>  {
+interface ChainItemProps {
+  chain: {
+    chain: 'solana' | 'ethereum';
+    publicKey: string;
+    privateKey: string;
+    balance: string | number;
+  }
+}
 
+const ChainItem: React.FC<ChainItemProps> = ({ chain }) => {
 
-const handleCopy = async (e) => {
+const handleCopy = async (e: MouseEvent<HTMLButtonElement>) => {
   e.stopPropagation();
   try {
     await navigator.clipboard.writeText(chain.publicKey);
