@@ -1,10 +1,4 @@
 "use client"
-
-// import nacl from "tweetnacl";
-// import { generateMnemonic, mnemonicToSeedSync } from "bip39";
-import { derivePath } from "ed25519-hd-key";
-// import { Connection, PublicKey, Keypair, LAMPORTS_PER_SOL, } from "@solana/web3.js";
- import { ethers, Wallet,HDNodeWallet } from "ethers";
 import bip39, { generateMnemonic } from "bip39";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import {
@@ -15,13 +9,10 @@ import {
   Modal,
   IconButton,
 } from "@mui/material";
-import { Grid } from "@mui/system";
 import { useRef, useState } from "react";
 import SeedPhrase from "./seedphrase";
-import WalletCreation, { conn, provider } from "./walletCreation";
+import WalletCreation from "./walletCreation";
 import ChainItem from "./receiveFeature";
-import { toast } from "react-toastify";
-import { Keypair,LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 const style = {
   position: 'absolute',
@@ -223,7 +214,7 @@ const wallets = () => {
             </>
           )}
 
-          {/* {step === "password" && (
+          {/* {step === 2 && (
             <Box>
               <Typography variant="h6" sx={{ mb: 1, color: '#ccc', fontWeight: 'bold' }}>
                 Create a password
@@ -283,9 +274,9 @@ const wallets = () => {
                   borderRadius: 3,
                   "&:hover": { bgcolor: "#a580ff" },
                   "&.Mui-disabled": {
-                    bgcolor: "#555", // visible disabled color
-                    color: "#aaa",   // lighter text
-                    opacity: 0.7,    // subtle fade
+                    bgcolor: "#555", 
+                    color: "#aaa",   
+                    opacity: 0.7,   
                   },
                 }}
                 onClick={() => {
@@ -348,8 +339,8 @@ const wallets = () => {
           {step === 4 && (
             <Box sx={{ maxHeight: 400,
     overflowY: "auto",
-    scrollbarWidth: "thin", // Firefox
-    scrollbarColor: "#9c6bff #181818", // Firefox
+    scrollbarWidth: "thin", 
+    scrollbarColor: "#9c6bff #181818", 
     "&::-webkit-scrollbar": {
       width: "8px",
       background: "#181818",
@@ -358,7 +349,7 @@ const wallets = () => {
     "&::-webkit-scrollbar-thumb": {
       background: "linear-gradient(135deg, #9c6bff 40%, #6b47ff 100%)",
       borderRadius: "8px",
-            borderLeft: "4px solid transparent", // pushes thumb right
+            borderLeft: "4px solid transparent", 
       minHeight: "40px",
       boxShadow: "0 2px 8px rgba(156,107,255,0.15)",
       border: "2px solid #181818",
@@ -378,6 +369,9 @@ const wallets = () => {
           ))}
         </Box> 
           )}
+
+
+          
 
         </Box>
       </Modal>

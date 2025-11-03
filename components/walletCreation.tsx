@@ -1,4 +1,4 @@
-import { Avatar, Button, Typography } from "@mui/material"
+import { Avatar, Button, Typography, Modal, TextField, MenuItem } from "@mui/material"
 import { Box } from "@mui/system"
 import QrCode2OutlinedIcon from '@mui/icons-material/QrCode2Outlined';
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined';
@@ -15,6 +15,7 @@ import WalletCard from "./walletCard";
 import ChainItem from "./receiveFeature";
 import { EthereumWallet, SolanaWallet } from "./wallets";
 import { toast } from "react-toastify";
+import SendModal from "./sendModal";
 
 // to create wallet and send receive features
 
@@ -43,6 +44,28 @@ const WalletCreation = ({
   setTokens: React.Dispatch<React.SetStateAction<WalletData[][]>>;
 }) => {
   const [walletCount,setWalletCount] = useState<number>(tokens.length)
+  // Send modal state
+  const [sendOpen, setSendOpen] = useState(false);
+  const [sendChain, setSendChain] = useState<'ethereum' | 'solana'>('ethereum');
+  const [sendTo, setSendTo] = useState('');
+  const [sendAmount, setSendAmount] = useState('');
+  const [selectedWalletIdx, setSelectedWalletIdx] = useState<number | null>(null);
+  const [sendError, setSendError] = useState('');
+  const [sending, setSending] = useState(false);
+  // For multi-token support
+  // Example: [{ symbol: 'ETH', address: '', balance: '...', decimals: 18 }, ...]
+  const [sendToken, setSendToken] = useState<any>(null);
+  // Placeholder: get tokens for selected chain (native + ERC-20/SPL)
+  const availableTokens = [
+    sendChain === 'ethereum'
+      ? { symbol: 'ETH', address: '', balance: tokens[0]?.[0]?.ethereum?.balance || '0', decimals: 18 }
+      : { symbol: 'SOL', address: '', balance: tokens[0]?.[0]?.solana?.balance || '0', decimals: 9 }
+    // Add more tokens here (ERC-20/SPL) as needed
+  ];
+  // Default to first token
+  useEffect(() => {
+    setSendToken(availableTokens[0]);
+  }, [sendChain, tokens.length]);
 
   useEffect(() => {
     
@@ -126,7 +149,7 @@ const WalletCreation = ({
 
 const addWallet=async ()=>{
    const wallet=await generateWallets(walletCount+1);
-   wallet ? toast.success(`Account Created SuccessFully`) : toast.error(`Something Went Wrong`)
+   wallet ? toast.success(`Account Created SuccessFully`) : ' ' ; 
   }
 
 
@@ -180,11 +203,11 @@ const addWallet=async ()=>{
               backgroundColor: "rgba(156, 107, 255, 0.1)",
             },
           }}
+          onClick={() => setSendOpen(true)}
         >
           Send
         </Button>
-
-
+    
               <Button
           startIcon={<SendOutlinedIcon sx={{ fontSize: 40, mb: 1.5, color: '#9c6bff' }} />}
           sx={{
@@ -266,6 +289,9 @@ const addWallet=async ()=>{
         </Box> 
   ) } */}
       </Box>
+
+      {/* --- Send Modal: Chain > Wallet > Details --- */}
+      <SendModal open={sendOpen} onClose={() => setSendOpen(false)} tokens={tokens} />
     </>
   )
 
