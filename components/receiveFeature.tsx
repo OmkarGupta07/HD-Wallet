@@ -37,7 +37,7 @@ const handleCopy = async (e) => {
 
 
   return (
-    <ListItem
+    <ListItem sx={{mt:3}}
       disableGutters
       className="bg-[#1C1C1C] hover:bg-[#282828] transition-colors p-4 rounded-xl mb-3 cursor-pointer"
       secondaryAction={
@@ -59,20 +59,38 @@ const handleCopy = async (e) => {
         </Box>
       </ListItemAvatar>
       <ListItemText
+        sx={{
+          maxWidth: { xs: '180px', sm: '250px' },
+          overflow: 'hidden'
+        }}
         primary={
-          <Typography variant="body1" className="text-white truncate  font-semibold">
+          <Typography variant="body1" sx={{
+            color: 'white',
+            fontWeight: 600,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}>
             {chain.chain.toUpperCase()}
           </Typography>
         }
         secondary={
-    <Tooltip title={chain.publicKey} arrow>
-        <Typography
-          component="span"
-          className="text-gray-400 text-sm truncate max-w-[180px]"
-        >
-          {chain.publicKey}
-        </Typography>
-      </Tooltip>
+          <Tooltip title={chain.publicKey} arrow>
+            <Typography
+              component="span"
+              sx={{
+                color: '#9c9c9c',
+                fontSize: '0.875rem',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                display: 'block',
+                maxWidth: '100%'
+              }}
+            >
+              {chain.publicKey}
+            </Typography>
+          </Tooltip>
         }
       />
     </ListItem>

@@ -14,7 +14,7 @@ import { Visibility, VisibilityOff, ContentCopy } from "@mui/icons-material";
 import WalletCard from "./walletCard";
 import ChainItem from "./receiveFeature";
 import { EthereumWallet, SolanaWallet } from "./wallets";
-import toast from "react-hot-toast";
+import { toast } from "react-toastify";
 
 // to create wallet and send receive features
 
@@ -25,10 +25,23 @@ const SOLANA_RPC = "https://solana-mainnet.g.alchemy.com/v2/qPuH3QPcyyGJdTzXi9hz
 const provider = new ethers.JsonRpcProvider(ETHEREUM_RPC);
 const conn = new Connection(SOLANA_RPC, "confirmed");
 
-const WalletCreation = ({ mnemonic,setStep , tokens,setTokens}: any) => {
+interface WalletData {
+  walletNumber: number;
+  solana: SolanaWallet;
+  ethereum: EthereumWallet;
+}
 
-  // const [tokens, setTokens] = useState<WalletType[]>([])
-
+const WalletCreation = ({ 
+  mnemonic, 
+  setStep, 
+  tokens, 
+  setTokens
+}: {
+  mnemonic: string;
+  setStep: (step: number) => void;
+  tokens: WalletData[][];
+  setTokens: React.Dispatch<React.SetStateAction<WalletData[][]>>;
+}) => {
   const [walletCount,setWalletCount] = useState<number>(0)
 
   useEffect(() => {
@@ -82,7 +95,7 @@ const WalletCreation = ({ mnemonic,setStep , tokens,setTokens}: any) => {
 
   const generateWallets = async (count:number) => {
         try {
-
+debugger;
           if(count>=3){
             toast.error('Cant Add More than 3 Accounts');
             return ;
@@ -91,15 +104,20 @@ const WalletCreation = ({ mnemonic,setStep , tokens,setTokens}: any) => {
       setWalletCount(count);
       const solanaWallet = await generateKeyPair("solana", mnemonic, count) as SolanaWallet;
       const ethereumWallet = await generateKeyPair("ethereum", mnemonic, count) as EthereumWallet;
-      const walletData = [
-        {
+      const walletData = {
           walletNumber: count,
           solana: solanaWallet,
           ethereum: ethereumWallet,
-        },
-      ];
+      };
 
-      setTokens((prevTokens) => [...prevTokens, walletData]);
+      // Check if a wallet with this number already exists
+      setTokens((prevTokens) => {
+        const exists = prevTokens.some(token => token[0].walletNumber === count);
+        if (exists) {
+          return prevTokens; // Don't add if wallet number already exists
+        }
+        return [...prevTokens, [walletData]];
+      });
       return true;
     }catch(err){
       console.log(err)
