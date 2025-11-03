@@ -89,7 +89,7 @@ const WalletCard = ({ chainData }: WalletCardProps) => {
       fontWeight: "bold",
     }}
   >
-    {Number(balance)}
+    {Number(balance)} {chain === "solana" ? 'SOL' : 'ETH' }
   </Typography>
 </Box>
 

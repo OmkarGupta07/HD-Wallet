@@ -4,7 +4,7 @@ import QrCode2OutlinedIcon from '@mui/icons-material/QrCode2Outlined';
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined';
 import { useEffect, useState } from "react";
 import nacl from "tweetnacl";
-import { generateMnemonic, mnemonicToSeed, mnemonicToSeedSync } from "bip39";
+import bip39,{ generateMnemonic, mnemonicToSeed, mnemonicToSeedSync } from "bip39";
 import { derivePath } from "ed25519-hd-key";
 import { Connection, PublicKey, Keypair, LAMPORTS_PER_SOL, } from "@solana/web3.js";
 import { ethers } from "ethers";
@@ -19,11 +19,11 @@ import { toast } from "react-toastify";
 // to create wallet and send receive features
 
 
-const ETHEREUM_RPC = "https://eth-mainnet.g.alchemy.com/v2/qPuH3QPcyyGJdTzXi9hz9";
-const SOLANA_RPC = "https://solana-mainnet.g.alchemy.com/v2/qPuH3QPcyyGJdTzXi9hz9";
+ const ETHEREUM_RPC = "https://eth-mainnet.g.alchemy.com/v2/qPuH3QPcyyGJdTzXi9hz9";
+ const SOLANA_RPC = "https://solana-devnet.g.alchemy.com/v2/qPuH3QPcyyGJdTzXi9hz9";
 
-const provider = new ethers.JsonRpcProvider(ETHEREUM_RPC);
-const conn = new Connection(SOLANA_RPC, "confirmed");
+export const provider = new ethers.JsonRpcProvider(ETHEREUM_RPC);
+export const conn = new Connection(SOLANA_RPC, "confirmed");
 
 interface WalletData {
   walletNumber: number;
@@ -42,12 +42,12 @@ const WalletCreation = ({
   tokens: WalletData[][];
   setTokens: React.Dispatch<React.SetStateAction<WalletData[][]>>;
 }) => {
-  const [walletCount,setWalletCount] = useState<number>(0)
+  const [walletCount,setWalletCount] = useState<number>(tokens.length)
 
   useEffect(() => {
     
-    if (mnemonic) generateWallets(walletCount);
-    else alert("Mnemonic Not Found");
+    if (mnemonic && tokens.length===0) generateWallets(walletCount);
+    //else alert("Mnemonic Not Found");
 
   }, [mnemonic]);
 
@@ -95,7 +95,6 @@ const WalletCreation = ({
 
   const generateWallets = async (count:number) => {
         try {
-debugger;
           if(count>=3){
             toast.error('Cant Add More than 3 Accounts');
             return ;
@@ -129,6 +128,9 @@ const addWallet=async ()=>{
    const wallet=await generateWallets(walletCount+1);
    wallet ? toast.success(`Account Created SuccessFully`) : toast.error(`Something Went Wrong`)
   }
+
+
+
 
   return (
     <>

@@ -2,10 +2,10 @@
 
 // import nacl from "tweetnacl";
 // import { generateMnemonic, mnemonicToSeedSync } from "bip39";
-// import { derivePath } from "ed25519-hd-key";
+import { derivePath } from "ed25519-hd-key";
 // import { Connection, PublicKey, Keypair, LAMPORTS_PER_SOL, } from "@solana/web3.js";
-// import { ethers } from "ethers";
-import { generateMnemonic } from "bip39";
+ import { ethers, Wallet,HDNodeWallet } from "ethers";
+import bip39, { generateMnemonic } from "bip39";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import {
   Box,
@@ -18,8 +18,10 @@ import {
 import { Grid } from "@mui/system";
 import { useRef, useState } from "react";
 import SeedPhrase from "./seedphrase";
-import WalletCreation from "./walletCreation";
+import WalletCreation, { conn, provider } from "./walletCreation";
 import ChainItem from "./receiveFeature";
+import { toast } from "react-toastify";
+import { Keypair,LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 const style = {
   position: 'absolute',
@@ -46,11 +48,13 @@ export interface SolanaWallet {
   privateKey: string;
   balance: string;
 }
-export interface WalletType {
+export interface WalletData {
   walletNumber: number;
   solana: SolanaWallet;
   ethereum: EthereumWallet;
 }
+
+export type WalletType = WalletData;
 
 const wallets = () => {
   const [step, setStep] = useState(0);
@@ -62,8 +66,7 @@ const wallets = () => {
   const [password, setPassword] = useState('')
   const [error, setError] = useState("");
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [tokens, setTokens] = useState<WalletType[]>([])
-
+  const [tokens, setTokens] = useState<WalletType[][]>([])
   const minStep = step >= 3 ? 2 : 1;
 
 
@@ -80,6 +83,8 @@ const wallets = () => {
     }
   };
 
+
+
   const handleSubmit = () => {
     if (password.length < 8) {
       setError("Password must be at least 8 characters long");
@@ -90,8 +95,6 @@ const wallets = () => {
       return;
     }
     setError("");
-    //setStep("seed");
-    //alert("Password successfully set!");
   };
 
 
@@ -108,20 +111,60 @@ const wallets = () => {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
+          '& .MuiBackdrop-root': {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            backdropFilter: 'blur(8px)',
+            background: `
+              radial-gradient(circle at center, rgba(156, 107, 255, 0.07) 0%, rgba(0, 0, 0, 0.9) 100%),
+              linear-gradient(135deg, rgba(156, 107, 255, 0.1) 0%, rgba(0, 0, 0, 0.95) 100%)
+            `,
+          }
         }}
       >
 
 
         <Box
           sx={{
-            bgcolor: "#0d0d0d",
+            bgcolor: "rgba(13, 13, 13, 0.95)",
             borderRadius: 4,
-            boxShadow: "0px 4px 20px rgba(0,0,0,0.6)",
             width: 400,
             p: 4,
             textAlign: "center",
             color: "white",
             position: "relative",
+            border: '1px solid rgba(156, 107, 255, 0.2)',
+            boxShadow: `
+              0 0 40px rgba(156, 107, 255, 0.1),
+              0 0 20px rgba(156, 107, 255, 0.05),
+              inset 0 0 10px rgba(156, 107, 255, 0.05)
+            `,
+            backdropFilter: 'blur(10px)',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              borderRadius: 4,
+              padding: '1px',
+              background: 'linear-gradient(135deg, rgba(156, 107, 255, 0.5), rgba(156, 107, 255, 0.1))',
+              WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+              WebkitMaskComposite: 'xor',
+              maskComposite: 'exclude',
+              pointerEvents: 'none'
+            },
+            animation: 'modalFadeIn 0.3s ease-out',
+            '@keyframes modalFadeIn': {
+              from: {
+                opacity: 0,
+                transform: 'scale(0.95)'
+              },
+              to: {
+                opacity: 1,
+                transform: 'scale(1)'
+              }
+            }
           }}
         >
 {   (step > 0 && step !=3 ) &&
@@ -175,6 +218,8 @@ const wallets = () => {
               >
                 I already have a wallet
               </Button>
+
+           
             </>
           )}
 
@@ -254,7 +299,7 @@ const wallets = () => {
           )} */}
 
           {step === 1 && (
-            <SeedPhrase mnemonic={mnemonic?.split(" ")} setStep={setStep} step={step} />
+            <SeedPhrase mnemonic={mnemonic?.split(" ")} setStep={setStep} step={step} setTokens={setTokens} setMnemonic={setMnemonic} />
           )}
 
           {step === 2 && (
@@ -336,6 +381,37 @@ const wallets = () => {
 
         </Box>
       </Modal>
+
+
+         <Typography 
+                component="div" 
+                sx={{ 
+                  position: 'absolute',
+                  bottom: -40,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  fontSize: '0.8rem',
+                  color: 'rgba(255,255,255,0.7)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  transition: 'color 0.3s ease',
+                  cursor: 'pointer',
+                  // '&:hover': {
+                  //   color: '#9c6bff'
+                  // }
+                }}
+                onClick={() => window.open('https://www.linkedin.com/in/omkar-gupta-8b1a35223/', '_blank')}
+              >
+             Developed by
+                <span style={{ 
+                  color: '#ffd',
+                  fontSize:'1rem',
+                  fontWeight: "bold"
+                }}>
+                  Omkar
+                </span>
+              </Typography>
     </div>
   )
 }

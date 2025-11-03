@@ -4,17 +4,30 @@ import {
     Button,
     TextField,
     Modal,
+    Grid,
 } from "@mui/material";
-import { Grid } from "@mui/system";
+import { Theme } from '@mui/material/styles';
+import { SxProps } from '@mui/system';
 import { useEffect, useState } from "react";
-import { ethers } from "ethers";
+import { ethers, Wallet } from "ethers";
 import * as bip39 from "bip39";
 import { derivePath } from "ed25519-hd-key";
-import { Keypair } from "@solana/web3.js";
+import { Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { HDNodeWallet } from "ethers";
+import { toast } from "react-toastify";
+import { conn, provider } from "./walletCreation";
+import { EthereumWallet, SolanaWallet, WalletData } from "./wallets";
 
 
-const SeedPhrase = ({ mnemonic, setStep, step }: any) => {
+interface SeedPhraseProps {
+  mnemonic: string[] | undefined;
+  setStep: (step: number) => void;
+  step: number;
+  setTokens: React.Dispatch<React.SetStateAction<WalletData[][]>>;
+  setMnemonic: (mnemonic: string) => void;
+}
+
+const SeedPhrase: React.FC<SeedPhraseProps> = ({ mnemonic, setStep, step, setTokens, setMnemonic }) => {
     const [words, setWords] = useState(
         Array.from({ length: 12 }, (_, i) => ({ id: i + 1, word: "" }))
     );
@@ -41,36 +54,65 @@ const SeedPhrase = ({ mnemonic, setStep, step }: any) => {
         rows.push(words.slice(i, i + 3));
     }
 
-    async function deriveWalletsFromMnemonic(mnemonic: string) {
-    const arr=[];
-  if (!bip39.validateMnemonic(mnemonic)) {
-    throw new Error("Invalid mnemonic");
+
+
+    const retriveWallet = async () => {
+        const phrase = words.map(ele => ele.word)
+        const mnemonic=phrase.join(' ');
+    if (!bip39.validateMnemonic(mnemonic)) {
+      toast.error("Invalid mnemonic");
+      return
+    }
+
+
+    for (let i = 0; i < 3; i++) {
+      const path =`44'/60'/0'/0/${i}`;
+      const node = HDNodeWallet.fromPhrase(mnemonic).derivePath(path);
+      const wallet = new Wallet(node.privateKey);
+      const balance = await provider.getBalance(wallet.address)
+      const ethBalance = ethers.formatEther(balance)
+
+      const ethWllet: EthereumWallet = {
+        chain: 'ethereum',
+        publicKey: wallet.address,
+        privateKey: wallet.privateKey,
+        balance: ethBalance
+      }
+
+
+      const seed = await bip39.mnemonicToSeed(mnemonic);
+      const solanaPath = `m/44'/501'/${i}'/0'`;
+      const { key } = derivePath(solanaPath, seed.toString('hex'))
+      const keypair = Keypair.fromSeed(key.slice(0, 32));
+      const lamports = await conn.getBalance(keypair.publicKey)
+      const solBalance = Number(lamports / LAMPORTS_PER_SOL);
+      const solanaWallet: SolanaWallet = {
+        chain: "solana",
+        publicKey: keypair.publicKey.toBase58(),
+        privateKey: Buffer.from(keypair.secretKey).toString("hex"),
+        balance: solBalance.toString(),
+      }
+
+       const walletData = {
+          walletNumber: i,
+          solana: solanaWallet,
+          ethereum: ethWllet,
+      };
+
+      setTokens((prevTokens) => {
+        const exists = prevTokens.some(token => token[0].walletNumber === i);
+        if (exists) {
+          return prevTokens; 
+        }
+        return [...prevTokens, [walletData]];
+      });
+
+      if(i==2){
+        setMnemonic(mnemonic);
+        setStep(2);
+      }
+    }
   }
-
-  const seed = await bip39.mnemonicToSeed(mnemonic);
-
-  const ethPath = `m/44'/60'/0'/0/0`;
-  const ethWallet = HDNodeWallet.fromPhrase(mnemonic, undefined, ethPath);
-
-  const solPath = `m/44'/501'/0'/0'`;
-  const derived = derivePath(solPath, seed.toString("hex"));
-  const solPrivateKey = derived.key.slice(0, 32);
-  const solKeypair = Keypair.fromSeed(solPrivateKey);
-
-  return {
-    ethereum: {
-      path: ethPath,
-      address: ethWallet.address,
-      privateKey: ethWallet.privateKey,
-    },
-    solana: {
-      path: solPath,
-      publicKey: solKeypair.publicKey.toBase58(),
-      secretKey: Buffer.from(solKeypair.secretKey).toString("hex"),
-    },
-  };
-}
-
 
     return (
         <Box>
@@ -83,12 +125,26 @@ const SeedPhrase = ({ mnemonic, setStep, step }: any) => {
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {rows.map((row, rowIndex) => (
-                    <Grid container spacing={2} key={rowIndex}>
+                    <Box 
+                        key={rowIndex}
+                        sx={{
+                            display: 'grid',
+                            gridTemplateColumns: {
+                                xs: '1fr',
+                                sm: 'repeat(3, 1fr)'
+                            },
+                            gap: 2
+                        }}
+                    >
                         {row.map((item, index) => (
-                            <Grid item xs={12} sm={4} key={item.id} sx={{ width: '30%' }}>
+                            <Box 
+                                key={item.id}
+                            >
                                 <TextField
                                     value={item.word}
-                                    InputProps={mnemonic?.length > 0 ? true : false}
+                                    InputProps={{
+                                        readOnly: mnemonic && mnemonic.length > 0
+                                    }}
                                     placeholder={`${item.id}.`}
                                     onChange={(e) => handleChange(rowIndex * 3 + index, e.target.value)}
                                     size="small"
@@ -111,9 +167,9 @@ const SeedPhrase = ({ mnemonic, setStep, step }: any) => {
                                         },
                                     }}
                                 />
-                            </Grid>
+                            </Box>
                         ))}
-                    </Grid>
+                    </Box>
                 ))}
             </Box>
 
@@ -136,11 +192,12 @@ const SeedPhrase = ({ mnemonic, setStep, step }: any) => {
                         opacity: 0.7,    // subtle fade
                     },
                 }}
-                onClick={() => {
-                 if(mnemonic.length>0)
-                    setStep(2)
-                else 
-                    deriveWalletsFromMnemonic()
+                onClick={async () => {
+                 if(mnemonic && mnemonic.length > 0) {
+                    setStep(2);
+                 } else {
+                    await retriveWallet();
+                 }
                 }}
             >
                 Continue
