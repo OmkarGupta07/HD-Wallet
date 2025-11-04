@@ -15,12 +15,12 @@ import WalletCard from "./walletCard";
 import ChainItem from "./receiveFeature";
 import { EthereumWallet, SolanaWallet } from "./wallets";
 import { toast } from "react-toastify";
-import SendModal from "./sendModal";
+import Loader from './Loader';
 
 // to create wallet and send receive features
 
 
- const ETHEREUM_RPC = "https://eth-mainnet.g.alchemy.com/v2/qPuH3QPcyyGJdTzXi9hz9";
+ const ETHEREUM_RPC = "https://eth-sepolia.g.alchemy.com/v2/qPuH3QPcyyGJdTzXi9hz9";
  const SOLANA_RPC = "https://solana-devnet.g.alchemy.com/v2/qPuH3QPcyyGJdTzXi9hz9";
 
 export const provider = new ethers.JsonRpcProvider(ETHEREUM_RPC);
@@ -44,28 +44,8 @@ const WalletCreation = ({
   setTokens: React.Dispatch<React.SetStateAction<WalletData[][]>>;
 }) => {
   const [walletCount,setWalletCount] = useState<number>(tokens.length)
-  // Send modal state
-  const [sendOpen, setSendOpen] = useState(false);
-  const [sendChain, setSendChain] = useState<'ethereum' | 'solana'>('ethereum');
-  const [sendTo, setSendTo] = useState('');
-  const [sendAmount, setSendAmount] = useState('');
-  const [selectedWalletIdx, setSelectedWalletIdx] = useState<number | null>(null);
-  const [sendError, setSendError] = useState('');
-  const [sending, setSending] = useState(false);
-  // For multi-token support
-  // Example: [{ symbol: 'ETH', address: '', balance: '...', decimals: 18 }, ...]
-  const [sendToken, setSendToken] = useState<any>(null);
-  // Placeholder: get tokens for selected chain (native + ERC-20/SPL)
-  const availableTokens = [
-    sendChain === 'ethereum'
-      ? { symbol: 'ETH', address: '', balance: tokens[0]?.[0]?.ethereum?.balance || '0', decimals: 18 }
-      : { symbol: 'SOL', address: '', balance: tokens[0]?.[0]?.solana?.balance || '0', decimals: 9 }
-    // Add more tokens here (ERC-20/SPL) as needed
-  ];
-  // Default to first token
-  useEffect(() => {
-    setSendToken(availableTokens[0]);
-  }, [sendChain, tokens.length]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
 
   useEffect(() => {
     
@@ -118,8 +98,10 @@ const WalletCreation = ({
 
   const generateWallets = async (count:number) => {
         try {
+      setIsLoading(true);
           if(count>=3){
             toast.error('Cant Add More than 3 Accounts');
+            setIsLoading(false);
             return ;
           }
 
@@ -132,16 +114,18 @@ const WalletCreation = ({
           ethereum: ethereumWallet,
       };
 
-      // Check if a wallet with this number already exists
       setTokens((prevTokens) => {
         const exists = prevTokens.some(token => token[0].walletNumber === count);
         if (exists) {
-          return prevTokens; // Don't add if wallet number already exists
+          setIsLoading(false);
+          return prevTokens; 
         }
         return [...prevTokens, [walletData]];
       });
+      setIsLoading(false);
       return true;
     }catch(err){
+      setIsLoading(false);
       console.log(err)
       return false;
     }
@@ -156,7 +140,8 @@ const addWallet=async ()=>{
 
 
   return (
-    <>
+    <Box sx={{ position: 'relative' }}>
+      <Loader open={isLoading} message="Creating account..." />
       <Box display="flex" justifyContent="space-around">
         <Button
           startIcon={<QrCode2OutlinedIcon sx={{ fontSize: 40, mb: 1.5, color: '#9c6bff' }} />} 
@@ -203,96 +188,89 @@ const addWallet=async ()=>{
               backgroundColor: "rgba(156, 107, 255, 0.1)",
             },
           }}
-          onClick={() => setSendOpen(true)}
+          onClick={() => setStep(5)}
         >
           Send
         </Button>
     
-              <Button
-          startIcon={<SendOutlinedIcon sx={{ fontSize: 40, mb: 1.5, color: '#9c6bff' }} />}
-          sx={{
-            flexDirection: "column",
-            alignItems: "center",
-            color: "#eee",
-            textTransform: "none",
-            fontWeight: 700,
-            border: "1px solid #9c6bff",
-            borderRadius: "16px",
-            px: 3,
-            py: 2,
-            "& .MuiButton-startIcon": {
-              margin: 0,
-            },
-            "&:hover": {
-              borderColor: "#a580ff",
-              backgroundColor: "rgba(156, 107, 255, 0.1)",
-            },
-          }}
-          disabled={walletCount==3} 
-          onClick={addWallet}
-        >
-          Add Wallet
-        </Button>
+        <Button
+  startIcon={<SendOutlinedIcon sx={{ fontSize: 40, mb: 1.5, color: '#9c6bff' }} />}
+  sx={{
+    flexDirection: "column",
+    alignItems: "center",
+    color: "#eee",
+    textTransform: "none",
+    fontWeight: 700,
+    border: "1px solid #9c6bff",
+    borderRadius: "16px",
+    px: 3,
+    py: 2,
+    transition: "all 0.2s ease",
+    "& .MuiButton-startIcon": {
+      margin: 0,
+    },
+    "&:hover": {
+      borderColor: "#a580ff",
+      backgroundColor: "rgba(156, 107, 255, 0.1)",
+    },
+    "&.Mui-disabled": {
+      color: "rgba(238, 238, 238, 0.4)", 
+      borderColor: "rgba(156, 107, 255, 0.3)", 
+      backgroundColor: "rgba(156, 107, 255, 0.05)",     },
+  }}
+  disabled={walletCount === 3 || isLoading}
+  onClick={addWallet}
+>
+  Add Wallet
+</Button>
 
-
-
-      </Box>
-
-      <Box>
         
+  </Box>
+
+  <Box>
+
         <Typography variant="h6" sx={{ mb: 1, color: "#fff" }}>
           Tokens
         </Typography>
 
-        <Box   
-               sx={{ maxHeight: 400,
-    overflowY: "auto",
-    scrollbarWidth: "thin", // Firefox
-    scrollbarColor: "#9c6bff #181818", // Firefox
-    "&::-webkit-scrollbar": {
-      width: "8px",
-      background: "#181818",
-      borderRadius: "8px",
-    },
-    "&::-webkit-scrollbar-thumb": {
-      background: "linear-gradient(135deg, #9c6bff 40%, #6b47ff 100%)",
-      borderRadius: "8px",
-            borderLeft: "4px solid transparent", // pushes thumb right
-      minHeight: "40px",
-      boxShadow: "0 2px 8px rgba(156,107,255,0.15)",
-      border: "2px solid #181818",
-      transition: "background 0.3s",
-    },
-    "&::-webkit-scrollbar-thumb:hover": {
-      background: "linear-gradient(135deg, #b89cff 0%, #9c6bff 100%)",
-    },
-    "&::-webkit-scrollbar-track": {
-      background: "#181818",
-      borderRadius: "8px",
-    },
-  }}
+        <Box
+          sx={{
+            maxHeight: 400,
+            overflowY: "auto",
+            scrollbarWidth: "thin", 
+            scrollbarColor: "#9c6bff #181818", 
+            "&::-webkit-scrollbar": {
+              width: "8px",
+              background: "#181818",
+              borderRadius: "8px",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              background: "linear-gradient(135deg, #9c6bff 40%, #6b47ff 100%)",
+              borderRadius: "8px",
+              borderLeft: "4px solid transparent", 
+              minHeight: "40px",
+              boxShadow: "0 2px 8px rgba(156,107,255,0.15)",
+              border: "2px solid #181818",
+              transition: "background 0.3s",
+            },
+            "&::-webkit-scrollbar-thumb:hover": {
+              background: "linear-gradient(135deg, #b89cff 0%, #9c6bff 100%)",
+            },
+            "&::-webkit-scrollbar-track": {
+              background: "#181818",
+              borderRadius: "8px",
+            },
+          }}
         >
-          {tokens.map( (item,index) => (<Box key={index}>
-         <Box key={`${index}-sol`}><WalletCard chainData={item[0].solana} />  </Box>
-         <Box  key={`${index}-eth`}><WalletCard   chainData={item[0].ethereum} /> </Box> </Box>
+          {tokens.map((item, index) => (<Box key={index}>
+            <Box key={`${index}-sol`}><WalletCard chainData={item[0].solana} />  </Box>
+            <Box key={`${index}-eth`}><WalletCard chainData={item[0].ethereum} /> </Box> </Box>
           ))}
-        </Box>  
-       
+        </Box>
 
-
- {/* { receive && ( 
-          <Box sx={{mt:5}}>
-          {tokens.map( (item,index) => (<Box key={index}>
-         <Box key={`${index}-sol`}><ChainItem chain={item.solana} />  </Box>
-         <Box  key={`${index}-eth`}><ChainItem   chain={item.ethereum} /> </Box> </Box>
-          ))}
-        </Box> 
-  ) } */}
       </Box>
 
-      {/* --- Send Modal: Chain > Wallet > Details --- */}
-      <SendModal open={sendOpen} onClose={() => setSendOpen(false)} tokens={tokens} />
-    </>
+    </Box>
   )
 
 

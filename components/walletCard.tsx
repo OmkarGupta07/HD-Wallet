@@ -84,12 +84,12 @@ const WalletCard = ({ chainData }: WalletCardProps) => {
   <Typography
     sx={{
       color: "#9c6bff",
-      fontSize: 15,
+      fontSize: 12,
       fontFamily: "monospace",
       fontWeight: "bold",
     }}
   >
-    {Number(balance)} {chain === "solana" ? 'SOL' : 'ETH' }
+    {balance} {chain === "solana" ? 'SOL' : 'ETH' }
   </Typography>
 </Box>
 
@@ -116,7 +116,6 @@ const WalletCard = ({ chainData }: WalletCardProps) => {
     transform: hovered ? "translateY(0)" : "translateY(-6px)",
     transition: "max-height 0.32s ease, opacity 0.28s ease, transform 0.28s ease",
     overflow: "hidden",
-    // allow children clicks even during transition
     pointerEvents: hovered ? "auto" : "none",
     mt: 0.5,
         }}
