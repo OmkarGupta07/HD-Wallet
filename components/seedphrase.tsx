@@ -187,9 +187,9 @@ const SeedPhrase: React.FC<SeedPhraseProps> = ({ mnemonic, setStep, step, setTok
                     mt: 3,
                     "&:hover": { bgcolor: "#a580ff" },
                     "&.Mui-disabled": {
-                        bgcolor: "#555", // visible disabled color
-                        color: "#aaa",   // lighter text
-                        opacity: 0.7,    // subtle fade
+                        bgcolor: "#555", 
+                        color: "#aaa",   
+                        opacity: 0.7,    
                     },
                 }}
                 onClick={async () => {

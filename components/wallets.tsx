@@ -14,6 +14,8 @@ import SeedPhrase from "./seedphrase";
 import WalletCreation from "./walletCreation";
 import ChainItem from "./receiveFeature";
 import SendFeature from "./SendFeature";
+import { GitHub, Twitter, LinkedIn } from "@mui/icons-material";
+
 
 const style = {
   position: 'absolute',
@@ -119,7 +121,6 @@ const wallets = () => {
           }
         }}
       >
-        <Box>
           <Box
             sx={{
               bgcolor: "rgba(13, 13, 13, 0.95)",
@@ -172,8 +173,8 @@ const wallets = () => {
                 sx={{
                   position: "absolute",
                   m: 1,
-                  top: 0,   // increased from 16 to create padding
-                  left: 0,  // increased to avoid overlap
+                  top: 0,   
+                  left: 0,  
                   zIndex: 1400,
                   color: '#9c6bff',
                   '&.Mui-disabled': {
@@ -393,43 +394,67 @@ const wallets = () => {
             )}
 
 
+      <Typography
+  component="div"
+  sx={{
+    position: 'absolute',
+    bottom: -40,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    fontSize: '0.8rem',
+    color: 'rgba(255,255,255,0.7)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    transition: 'color 0.3s ease',
+    cursor: 'pointer',
+    whiteSpace:'nowrap',
+    mt:5
+  }}
+>
+  Developed by
+  <span
+    style={{
+      color: '#ffd',
+      fontSize: '1rem',
+      fontWeight: 'bold',
+    }}
+  >
+    Omkar
+  </span>
 
+  {/* Social Icons */}
+  <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+    <IconButton
+      size="small"
+      sx={{ color: '#fff', '&:hover': { color: '#9c6bff' } }}
+      onClick={() => window.open('https://www.linkedin.com/in/omkargupta011/', '_blank')}
+    >
+      <LinkedIn fontSize="small" />
+    </IconButton>
+    <IconButton
+      size="small"
+      sx={{ color: '#fff', '&:hover': { color: '#9c6bff' } }}
+      onClick={() => window.open('https://github.com/OmkarGupta07', '_blank')}
+    >
+      <GitHub fontSize="small" />
+    </IconButton>
+    <IconButton
+      size="small"
+      sx={{ color: '#fff', '&:hover': { color: '#9c6bff' } }}
+      onClick={() => window.open('https://twitter.com/omkargupta07', '_blank')}
+    >
+      <Twitter fontSize="small" />
+    </IconButton>
+  </Box>
+</Typography>
 
           </Box>
 
-        </Box>
       </Modal>
 
 
-      <Typography
-        component="div"
-        sx={{
-          position: 'absolute',
-          bottom: -40,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          fontSize: '0.8rem',
-          color: 'rgba(255,255,255,0.7)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px',
-          transition: 'color 0.3s ease',
-          cursor: 'pointer',
-          // '&:hover': {
-          //   color: '#9c6bff'
-          // }
-        }}
-        onClick={() => window.open('https://www.linkedin.com/in/omkar-gupta-8b1a35223/', '_blank')}
-      >
-        Developed by
-        <span style={{
-          color: '#ffd',
-          fontSize: '1rem',
-          fontWeight: "bold"
-        }}>
-          Omkar
-        </span>
-      </Typography>
+      
     </div>
   )
 }
